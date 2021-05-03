@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons/adjacent.png</file>
+    <file>icons/not_adjacent.png</file>
+    <file>icons/not_related.png</file>
+    <file>icons/related_not_adjacent.png</file>
+  </qresource>
+</RCC>
