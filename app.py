@@ -9,7 +9,7 @@ import sys
 import os
 
 # import resources
-import lib.ui.res_rc
+from lib.ui import res_rc
 
 # Globals
 app_root = os.path.dirname(os.path.realpath(__file__))
@@ -44,7 +44,6 @@ class App(QObject):
         self.__load_ui(ui_file_name, title)
 
         # Events
-         
 
         self.__update_matrix()
 
