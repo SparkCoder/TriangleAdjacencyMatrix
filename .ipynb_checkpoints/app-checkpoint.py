@@ -3,7 +3,7 @@ from PIL import ImageQt
 from PIL import Image
 
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication, QPushButton, QLabel, QListWidgetItem, QFileDialog
+from PySide2.QtWidgets import QApplication, QPushButton, QLabel, QListWidgetItem
 from PySide2.QtCore import QFile, QObject
 from PySide2.QtCore import Qt as Qt
 from PySide2.QtGui import QIcon, QPixmap
@@ -37,8 +37,6 @@ class App(QObject):
             raise Exception('Cannot spawn multiple App windows!')
 
         # Setup
-        self.image = None
-        self.curr_dir = os.path.join(os.environ["HOMEPATH"], "Desktop")
         self.current_marker = -1
         self.kinds = [
             QIcon(':/icons/icons/adjacent.png'),
@@ -47,32 +45,22 @@ class App(QObject):
             QIcon(':/icons/icons/related_not_adjacent.png'),
         ]
         self.labels = [
-            'item 0',
             'item 1',
-            'item 2'
+            'item 2',
+            'item 3'
         ]
         self.__generate_matrix(rewamp=True)
+        self.__generate_compute()
         self.__load_ui(ui_file_name, title)
+
+        self.__update_matrix()
 
         self.window.labels.clear()
         for label in self.labels:
             self.__add_label(label, list_update=False)
 
-        # Styling data
-        self.font_size = self.window.fontSize.value()
-        self.font_family = self.window.fontFamily.currentFont()
-
-        # Computation system
-        self.__generate_compute()
-        self.__update_matrix()
-
         # Events
         self.window.addLabelBtn.clicked.connect(self.add_label_event)
-        self.window.saveBtn.clicked.connect(self.save_event)
-
-        self.window.fontSize.valueChanged.connect(self.apply_styling_event)
-        self.window.fontFamily.currentFontChanged.connect(
-            self.apply_styling_event)
 
         self.window.adjacentBtn.clicked.connect(
             lambda: self.set_current_marker_event(0))
@@ -98,30 +86,11 @@ class App(QObject):
         self.__generate_matrix()
         self.__update_matrix()
 
-    def save_event(self):
-        if self.image is not None:
-            file_path = QFileDialog.getSaveFileName(
-                self.window, 'Save Image', self.curr_dir, "PNG Image files (*.png)")[0]
-            if file_path.strip() != '':
-                self.curr_dir = os.path.dirname(file_path)
-                self.image.save(file_path)
-
-    def apply_styling_event(self):
-        self.font_size = self.window.fontSize.value()
-        self.font_family = self.window.fontFamily.currentFont()
-
-        self.__set_styling_values()
-        self.__compute_image()
-
-    def __set_styling_values(self):
-        self.tam.font = ImageFont.truetype(
-            self.font_family.family(), self.font_size)
-
     def __generate_compute(self):
-        width = 2048
+        width = 1024
         thickness = 30
-        font = ImageFont.truetype(
-            self.font_family.family() + '.ttf', self.font_size)
+        font = ImageFont.truetype(os.path.join(
+            app_root, 'lib', 'ui', 'fonts', 'Poppins-Bold.ttf'), 80)
         line_color = '#020202'
         icons_path = os.path.join(app_root, 'lib', 'ui', 'icons')
         icons = [
@@ -139,11 +108,10 @@ class App(QObject):
 
         img = self.tam.generate()
 
-        self.image = img.copy()
-
-        h = self.window.generated.height() - 10
-        img = img.resize((int(img.size[0] * (h / img.size[1])), h),
-                         resample=Image.ANTIALIAS)
+        h = self.window.generated.height()
+        print(img.size)
+        # img.resize((img.size[0] * (h // img.size[1]), h),
+        #           resample=Image.ANTIALIAS)
 
         image = ImageQt.ImageQt(img)
         pixmap = QPixmap()
@@ -201,15 +169,14 @@ class App(QObject):
         for row in range(label_count):
             for col in range(row):
                 matrix[row, col] = i
-                matrix[col, row] = i
                 i = (i + 1) % 4
 
-        if not rewamp:
+        if rewamp:
+            self.matrix = matrix
+        else:
             for row in range(min(len(self.matrix), label_count)):
-                for col in range(min(len(self.matrix[row]), label_count)):
-                    matrix[row, col] = self.matrix[row, col]
-                    matrix[col, row] = self.matrix[row, col]
-        self.matrix = matrix
+                for col in range(min(len(row), label_count)):
+                    self.matrix[row, col] = matrix[row, col]
 
     def __update_matrix(self):
         label_count = len(self.labels)

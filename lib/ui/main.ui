@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
-    <height>720</height>
+    <width>1276</width>
+    <height>711</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,7 +55,7 @@
            <enum>QTabWidget::North</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="labelsTab">
            <attribute name="title">
@@ -89,8 +89,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>328</width>
-                 <height>74</height>
+                 <width>707</width>
+                 <height>85</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -240,7 +240,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_4">
+               <widget class="QPushButton" name="notRelatedBtn">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                   <horstretch>0</horstretch>
@@ -263,7 +263,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_9">
+               <widget class="QPushButton" name="relatedNotAdjacentBtn">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                   <horstretch>0</horstretch>
@@ -278,7 +278,7 @@
                   <normaloff>:/icons/icons/related_not_adjacent.png</normaloff>:/icons/icons/related_not_adjacent.png</iconset>
                 </property>
                 <property name="checkable">
-                 <bool>false</bool>
+                 <bool>true</bool>
                 </property>
                 <property name="autoExclusive">
                  <bool>true</bool>
@@ -290,14 +290,239 @@
            </layout>
           </widget>
           <widget class="QWidget" name="styleTab">
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
            <attribute name="title">
             <string>Style</string>
            </attribute>
+           <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0">
+            <item row="1" column="0">
+             <widget class="QScrollArea" name="scrollArea_3">
+              <property name="widgetResizable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="scrollAreaWidgetContents_2">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>686</width>
+                 <height>818</height>
+                </rect>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                 <widget class="QFrame" name="Styling">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>20</width>
+                    <height>800</height>
+                   </size>
+                  </property>
+                  <property name="frameShape">
+                   <enum>QFrame::StyledPanel</enum>
+                  </property>
+                  <property name="frameShadow">
+                   <enum>QFrame::Raised</enum>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_5">
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_3">
+                     <item>
+                      <widget class="QLabel" name="label">
+                       <property name="text">
+                        <string>Font Size:</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="margin">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="fontSize">
+                       <property name="minimum">
+                        <number>2</number>
+                       </property>
+                       <property name="maximum">
+                        <number>500</number>
+                       </property>
+                       <property name="value">
+                        <number>80</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_5">
+                     <item>
+                      <widget class="QLabel" name="label_2">
+                       <property name="text">
+                        <string>Font Family:</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="margin">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QFontComboBox" name="fontFamily">
+                       <property name="currentText">
+                        <string>Calibri</string>
+                       </property>
+                       <property name="currentFont">
+                        <font>
+                         <family>Calibri</family>
+                         <weight>75</weight>
+                         <bold>true</bold>
+                        </font>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_6">
+                     <item>
+                      <widget class="QLabel" name="label_3">
+                       <property name="text">
+                        <string>Line Thickness:</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="margin">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="lineThickness">
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="maximum">
+                        <number>100</number>
+                       </property>
+                       <property name="value">
+                        <number>30</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_7">
+                     <item>
+                      <widget class="QLabel" name="label_4">
+                       <property name="text">
+                        <string>Line Color:</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="margin">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="lineColorR">
+                       <property name="mouseTracking">
+                        <bool>false</bool>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">background-color: #ff5555;</string>
+                       </property>
+                       <property name="maximum">
+                        <number>255</number>
+                       </property>
+                       <property name="value">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="lineColorG">
+                       <property name="styleSheet">
+                        <string notr="true">background-color: #55ff55;</string>
+                       </property>
+                       <property name="maximum">
+                        <number>255</number>
+                       </property>
+                       <property name="value">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="lineColorB">
+                       <property name="styleSheet">
+                        <string notr="true">background-color: #5555ff;</string>
+                       </property>
+                       <property name="maximum">
+                        <number>255</number>
+                       </property>
+                       <property name="value">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_8">
+                     <item>
+                      <widget class="QLabel" name="label_5">
+                       <property name="text">
+                        <string>Image Border:</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="margin">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="imageBorder">
+                       <property name="maximum">
+                        <number>100</number>
+                       </property>
+                       <property name="value">
+                        <number>50</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="saveBtn">
           <property name="text">
            <string>SAVE</string>
           </property>
@@ -326,13 +551,13 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>864</width>
-          <height>659</height>
+          <width>530</width>
+          <height>619</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QLabel" name="Generated">
+          <widget class="QLabel" name="generated">
            <property name="text">
             <string/>
            </property>
@@ -353,8 +578,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1280</width>
-     <height>21</height>
+     <width>1276</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
