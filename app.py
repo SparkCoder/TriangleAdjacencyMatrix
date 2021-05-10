@@ -4,9 +4,9 @@ from PIL import Image
 
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import QApplication, QPushButton, QLabel, QListWidgetItem, QFileDialog
-from PySide2.QtCore import QFile, QObject
+from PySide2.QtCore import QFile, QObject, QStandardPaths
 from PySide2.QtCore import Qt as Qt
-from PySide2.QtGui import QIcon, QPixmap
+from PySide2.QtGui import QFont, QFontDatabase, QIcon, QPixmap
 
 from lib.labelListItem import LabelListItem
 
@@ -39,6 +39,7 @@ class App(QObject):
         # Setup
         self.image = None
         self.curr_dir = os.path.join(os.environ["HOMEPATH"], "Desktop")
+        _, self.family_to_path, _ = self.__get_font_paths()
         self.current_marker = -1
         self.kinds = [
             QIcon(':/icons/icons/adjacent.png'),
@@ -60,7 +61,14 @@ class App(QObject):
 
         # Styling data
         self.font_size = self.window.fontSize.value()
-        self.font_family = self.window.fontFamily.currentFont()
+        self.font_family: QFont = self.window.fontFamily.currentFont()
+        self.line_thickness = self.window.lineThickness.value()
+        self.line_color = (
+            self.window.lineColorR.value(),
+            self.window.lineColorG.value(),
+            self.window.lineColorB.value()
+        )
+        self.border = self.window.imageBorder.value()
 
         # Computation system
         self.__generate_compute()
@@ -73,6 +81,12 @@ class App(QObject):
         self.window.fontSize.valueChanged.connect(self.apply_styling_event)
         self.window.fontFamily.currentFontChanged.connect(
             self.apply_styling_event)
+        self.window.lineThickness.valueChanged.connect(
+            self.apply_styling_event)
+        self.window.lineColorR.valueChanged.connect(self.apply_styling_event)
+        self.window.lineColorG.valueChanged.connect(self.apply_styling_event)
+        self.window.lineColorB.valueChanged.connect(self.apply_styling_event)
+        self.window.imageBorder.valueChanged.connect(self.apply_styling_event)
 
         self.window.adjacentBtn.clicked.connect(
             lambda: self.set_current_marker_event(0))
@@ -106,22 +120,72 @@ class App(QObject):
                 self.curr_dir = os.path.dirname(file_path)
                 self.image.save(file_path)
 
+    def __get_font_paths(self):
+        font_paths = QStandardPaths.standardLocations(
+            QStandardPaths.FontsLocation)
+
+        accounted = []
+        unloadable = []
+        family_to_path = {}
+
+        db = QFontDatabase()
+        for fpath in font_paths:  # go through all font paths
+            # go through all files at each path
+            for filename in os.listdir(fpath):
+                path = os.path.join(fpath, filename)
+
+                idx = db.addApplicationFont(path)  # add font path
+
+                if idx < 0:
+                    unloadable.append(path)  # font wasn't loaded if idx is -1
+                else:
+                    names = db.applicationFontFamilies(
+                        idx)  # load back font family name
+
+                    for n in names:
+                        if n in family_to_path:
+                            accounted.append((n, path))
+                        else:
+                            family_to_path[n] = path
+                    # this isn't a 1:1 mapping, for example
+                    # 'C:/Windows/Fonts/HTOWERT.TTF' (regular) and
+                    # 'C:/Windows/Fonts/HTOWERTI.TTF' (italic) are different
+                    # but applicationFontFamilies will return 'High Tower Text' for both
+        return unloadable, family_to_path, accounted
+
+    def __get_current_font(self):
+        family = self.font_family.family()
+        if family in self.family_to_path:
+            path = self.family_to_path[family]
+        else:
+            path = self.family_to_path['Calibri']
+        return ImageFont.truetype(path, self.font_size)
+
     def apply_styling_event(self):
         self.font_size = self.window.fontSize.value()
-        self.font_family = self.window.fontFamily.currentFont()
+        self.font_family: QFont = self.window.fontFamily.currentFont()
+        self.line_thickness = self.window.lineThickness.value()
+        self.line_color = (
+            self.window.lineColorR.value(),
+            self.window.lineColorG.value(),
+            self.window.lineColorB.value()
+        )
+        self.border = self.window.imageBorder.value()
 
         self.__set_styling_values()
         self.__compute_image()
 
     def __set_styling_values(self):
-        self.tam.font = ImageFont.truetype(
-            self.font_family.family(), self.font_size)
+        self.tam.font = self.__get_current_font()
+        self.tam.thickness = self.line_thickness
+        self.tam.line_color = self.line_color
+        self.tam.border = self.border
 
     def __generate_compute(self):
         width = 2048
         thickness = 30
         font = ImageFont.truetype(
-            self.font_family.family() + '.ttf', self.font_size)
+            self.family_to_path[self.font_family.family()], self.font_size)
         line_color = '#020202'
         icons_path = os.path.join(app_root, 'lib', 'ui', 'icons')
         icons = [
