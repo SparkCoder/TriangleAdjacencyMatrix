@@ -1,2 +1,2 @@
 # Triangle Adjacency Matrix
-This app geenrates triangualr adjacency matrix as an image
+This app generates triangualar adjacency matrix as an image

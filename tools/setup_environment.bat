@@ -16,6 +16,8 @@ echo Installing Packages...
 echo.
 call .\env\Scripts\activate.bat
 "%cd%\env\Scripts\python.exe" -m pip install --no-cache -r "%cd%\tools\requirements.txt"
+pyi-makespec --onefile --windowed --icon "%cd%/icon.ico" --add-data "%cd%/lib/ui/about.ui;lib/ui/about.ui" --add-data "%cd%/lib/ui/main.ui;lib/ui/main.ui" --add-data "%cd%/lib/ui/icons;lib/ui/icons/" "%cd%/app.py"
+wrote C:\Users\ABHISHEK D\Desktop\To be sorted\Ammu\App\TriangleAdjacencyMatrix\app.spec
 echo.
 echo Installation complete!
 deactivate

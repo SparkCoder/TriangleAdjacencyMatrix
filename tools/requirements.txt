@@ -4,3 +4,4 @@ shiboken2==5.15.2
 toml==0.10.2
 Pillow==8.2.0
 qt_material==2.8.7
+pyinstaller==4.3

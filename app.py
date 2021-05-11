@@ -24,7 +24,18 @@ import os
 from lib.ui import res_rc
 
 # Globals
-app_root = os.path.dirname(os.path.realpath(__file__))
+pref_loc = os.path.expanduser(os.path.join(
+    '~', 'Documents', 'TriangleAdjacencyMatrix'))
+
+
+def resource_path(relative_path):
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class AboutDialog(QObject):
@@ -39,7 +50,7 @@ class AboutDialog(QObject):
         self.window.okBtn.clicked.connect(self.close_event)
 
     def __load_ui(self):
-        ui_file_name = os.path.join(app_root, 'lib', 'ui', 'about.ui')
+        ui_file_name = resource_path(os.path.join('lib', 'ui', 'about.ui'))
 
         loader = QUiLoader()
         ui_file = QFile(ui_file_name)
@@ -49,7 +60,8 @@ class AboutDialog(QObject):
                 f"Cannot open {ui_file_name}: {ui_file.errorString()}")
 
         self.window = loader.load(ui_file)
-        icon_path = os.path.join(app_root, 'lib', 'ui', 'icons', 'icon.png')
+        icon_path = resource_path(os.path.join(
+            'lib', 'ui', 'icons', 'icon.png'))
         appIcon = QIcon(icon_path)
         self.window.setWindowIcon(appIcon)
 
@@ -167,18 +179,18 @@ class App(QObject):
         self.__update_matrix()
 
     def __load_theme(self):
-        if os.path.exists('user.pref'):
-            with open('user.pref', 'rb') as prefs_file:
+        if os.path.exists(os.path.join(pref_loc, 'user.pref')):
+            with open(os.path.join(pref_loc, 'user.pref'), 'rb') as prefs_file:
                 prefs_data = pickle.load(prefs_file)
                 qtm.apply_stylesheet(self.app, theme=prefs_data['theme'])
         else:
-            self.__save_theme('light_blue.xml')
+            self.set_light_theme_event()
 
     def __save_theme(_, theme):
         prefs_data = {
             'theme': theme
         }
-        with open('user.pref', 'wb') as prefs_file:
+        with open(os.path.join(pref_loc, 'user.pref'), 'wb') as prefs_file:
             pickle.dump(prefs_data, prefs_file)
 
     def set_light_theme_event(self):
@@ -324,7 +336,7 @@ class App(QObject):
 
     def __generate_compute(self):
         width = 2048
-        icons_path = os.path.join(app_root, 'lib', 'ui', 'icons')
+        icons_path = resource_path(os.path.join('lib', 'ui', 'icons'))
         icons = [
             Image.open(os.path.join(icons_path, 'adjacent.png')),
             Image.open(os.path.join(icons_path, 'not_adjacent.png')),
@@ -459,7 +471,8 @@ class App(QObject):
         self.window = loader.load(ui_file)
         self.window.setWindowTitle(title)
 
-        icon_path = os.path.join(app_root, 'lib', 'ui', 'icons', 'icon.png')
+        icon_path = resource_path(os.path.join(
+            'lib', 'ui', 'icons', 'icon.png'))
         appIcon = QIcon(icon_path)
         self.window.setWindowIcon(appIcon)
 
@@ -469,11 +482,14 @@ class App(QObject):
 
 
 def open_new_window(file_path=None, curr_dir=None, family_to_path=None):
-    App(os.path.join(app_root, 'lib', 'ui', 'main.ui'),
+    App(resource_path(os.path.join('lib', 'ui', 'main.ui')),
         'Triangle Adjacency Matrix', curr_dir=curr_dir, file_path=file_path, family_to_path=family_to_path)
 
 
 if __name__ == '__main__':
+    if not os.path.exists(pref_loc):
+        os.mkdir(pref_loc)
+
     args = sys.argv
     app = QApplication(args)
 
