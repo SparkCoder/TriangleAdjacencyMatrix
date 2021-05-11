@@ -131,21 +131,30 @@ class App(QObject):
         self.__update_matrix()
 
     def __load_theme(self):
-        pass
+        if os.path.exists('user.pref'):
+            with open('user.pref', 'rb') as prefs_file:
+                prefs_data = pickle.load(prefs_file)
+                qtm.apply_stylesheet(self.app, theme=prefs_data['theme'])
+        else:
+            self.__save_theme('light_blue.xml')
 
-    def __save_theme(self, theme):
-        pass
+    def __save_theme(_, theme):
+        prefs_data = {
+            'theme': theme
+        }
+        with open('user.pref', 'wb') as prefs_file:
+            pickle.dump(prefs_data, prefs_file)
 
     def set_light_theme_event(self):
         qtm.apply_stylesheet(self.app, theme='light_blue.xml')
-        self.__save_theme(0)
+        self.__save_theme('light_blue.xml')
 
     def set_dark_theme_event(self):
         qtm.apply_stylesheet(self.app, theme='dark_blue.xml')
-        self.__save_theme(1)
+        self.__save_theme('dark_blue.xml')
 
     def __load_file(self, file_path: str):
-        if file_path.endswith('.tam'):
+        if file_path.endswith('.tam') and os.path.exists(file_path):
             self.window.setWindowTitle(
                 self.window.windowTitle() + ': ' + os.path.basename(file_path))
             with open(file_path, 'rb') as file:
