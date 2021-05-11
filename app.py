@@ -1,9 +1,10 @@
 from PIL import ImageFont
 from PIL import ImageQt
 from PIL import Image
+from PySide2 import QtWidgets
 
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication, QPushButton, QLabel, QListWidgetItem, QFileDialog
+from PySide2.QtWidgets import QApplication, QPushButton, QLabel, QListWidgetItem, QFileDialog, QWidget
 from PySide2.QtCore import QFile, QObject, QStandardPaths
 from PySide2.QtCore import Qt as Qt
 from PySide2.QtGui import QFont, QFontDatabase, QIcon, QPixmap
@@ -12,8 +13,10 @@ from lib.labelListItem import LabelListItem
 
 from lib.trangleAdjacancyMatrix import TriangleAdjacencyMatrix
 
+import qt_material as qtm
 import numpy as np
 
+import pickle
 import sys
 import os
 
@@ -25,21 +28,20 @@ app_root = os.path.dirname(os.path.realpath(__file__))
 
 
 class App(QObject):
-    __instance = None
-
-    def __init__(self, ui_file_name, title, parent=None):
+    def __init__(self, ui_file_name, title, file_path=None, curr_dir=None, family_to_path=None, parent=None):
         super(App, self).__init__(parent)
 
-        # Singleton
-        if App.__instance is None:
-            App.__instance = self
-        elif App.__instance != self:
-            raise Exception('Cannot spawn multiple App windows!')
+        # Get app context
+        self.app = QtWidgets.QApplication.instance()
+        if self.app is None:
+            raise Exception('App context is not accessible!')
 
         # Setup
         self.image = None
-        self.curr_dir = os.path.join(os.environ["HOMEPATH"], "Desktop")
-        _, self.family_to_path, _ = self.__get_font_paths()
+        self.curr_dir = os.path.join(
+            os.environ["HOMEPATH"], "Desktop") if curr_dir is None else curr_dir
+        _, self.family_to_path, _ = self.__get_font_paths(
+        ) if family_to_path is None else (None, family_to_path, None)
         self.current_marker = -1
         self.kinds = [
             QIcon(':/icons/icons/adjacent.png'),
@@ -52,31 +54,47 @@ class App(QObject):
             'item 1',
             'item 2'
         ]
+        self.__load_theme()
         self.__generate_matrix(rewamp=True)
         self.__load_ui(ui_file_name, title)
 
-        self.window.labels.clear()
-        for label in self.labels:
-            self.__add_label(label, list_update=False)
-
         # Styling data
-        self.font_size = self.window.fontSize.value()
-        self.font_family: QFont = self.window.fontFamily.currentFont()
-        self.line_thickness = self.window.lineThickness.value()
-        self.line_color = (
-            self.window.lineColorR.value(),
-            self.window.lineColorG.value(),
-            self.window.lineColorB.value()
-        )
-        self.border = self.window.imageBorder.value()
+        self.styling = {
+            'font_size': self.window.fontSize.value(),
+            'font_family': self.window.fontFamily.currentFont().family(),
+            'line_thickness': self.window.lineThickness.value(),
+            'line_color': (
+                self.window.lineColorR.value(),
+                self.window.lineColorG.value(),
+                self.window.lineColorB.value()
+            ),
+            'border': self.window.imageBorder.value()
+        }
+
+        if file_path is not None:
+            self.__load_file(file_path)
 
         # Computation system
         self.__generate_compute()
+
+        # Update UI
+        self.window.labels.clear()
+        for label in self.labels:
+            self.__add_label(label, list_update=False)
         self.__update_matrix()
 
         # Events
+        self.window.actionLight.triggered.connect(self.set_light_theme_event)
+        self.window.actionDark.triggered.connect(self.set_dark_theme_event)
+        self.window.actionNew.triggered.connect(
+            lambda: open_new_window(curr_dir=self.curr_dir, family_to_path=self.family_to_path))
+        self.window.actionOpen.triggered.connect(self.open_event)
+        self.window.actionSave.triggered.connect(self.save_event)
+        self.window.actionExport.triggered.connect(self.export_event)
+        self.window.actionExit.triggered.connect(self.quit_app_event)
+
         self.window.addLabelBtn.clicked.connect(self.add_label_event)
-        self.window.saveBtn.clicked.connect(self.save_event)
+        self.window.exportBtn.clicked.connect(self.export_event)
 
         self.window.fontSize.valueChanged.connect(self.apply_styling_event)
         self.window.fontFamily.currentFontChanged.connect(
@@ -112,7 +130,77 @@ class App(QObject):
         self.__generate_matrix()
         self.__update_matrix()
 
+    def __load_theme(self):
+        pass
+
+    def __save_theme(self, theme):
+        pass
+
+    def set_light_theme_event(self):
+        qtm.apply_stylesheet(self.app, theme='light_blue.xml')
+        self.__save_theme(0)
+
+    def set_dark_theme_event(self):
+        qtm.apply_stylesheet(self.app, theme='dark_blue.xml')
+        self.__save_theme(1)
+
+    def __load_file(self, file_path: str):
+        if file_path.endswith('.tam'):
+            self.window.setWindowTitle(
+                self.window.windowTitle() + ': ' + os.path.basename(file_path))
+            with open(file_path, 'rb') as file:
+                data = pickle.load(file)
+
+                # Load data
+                self.labels = data['labels']
+                self.matrix = data['matrix']
+                self.styling = data['styling']
+                self.current_marker = data['current_marker']
+                self.curr_dir = data['curr_dir']
+
+                # Update UI
+                self.window.fontSize.setValue(self.styling['font_size'])
+                self.window.fontFamily.setCurrentFont(
+                    QFont(self.styling['font_family'], 8))
+                self.window.lineThickness.setValue(
+                    self.styling['line_thickness'])
+                self.window.lineColorR.setValue(self.styling['line_color'][0])
+                self.window.lineColorG.setValue(self.styling['line_color'][1])
+                self.window.lineColorB.setValue(self.styling['line_color'][2])
+                self.window.imageBorder.setValue(self.styling['border'])
+                self.window.statusbar.showMessage('Loaded!', timeout=2000)
+
     def save_event(self):
+        file_path = QFileDialog.getSaveFileName(
+            self.window, 'Save Triangle Matrix', self.curr_dir, "Triangle Matrix files (*.tam)")[0]
+        self.window.setWindowTitle(
+            self.window.windowTitle() + ': ' + os.path.basename(file_path))
+        if file_path.strip() != '':
+            self.curr_dir = os.path.dirname(file_path)
+
+            data = {
+                'labels': self.labels,
+                'matrix': self.matrix,
+                'styling': self.styling,
+                'current_marker': self.current_marker,
+                'curr_dir': self.curr_dir
+            }
+            with open(file_path, 'wb') as file:
+                pickle.dump(data, file)
+            self.window.statusbar.showMessage('Saved!', timeout=2000)
+
+    def open_event(self):
+        file_path = QFileDialog.getOpenFileName(
+            self.window, 'Open Triangle Matrix', self.curr_dir, "Triangle Matrix files (*.tam)")[0]
+        if file_path.strip() != '':
+            self.curr_dir = os.path.dirname(file_path)
+            open_new_window(file_path=file_path, curr_dir=self.curr_dir,
+                            family_to_path=self.family_to_path)
+
+    def quit_app_event(self):
+        self.window.close()
+
+    def export_event(self):
         if self.image is not None:
             file_path = QFileDialog.getSaveFileName(
                 self.window, 'Save Image', self.curr_dir, "PNG Image files (*.png)")[0]
@@ -154,39 +242,35 @@ class App(QObject):
         return unloadable, family_to_path, accounted
 
     def __get_current_font(self):
-        family = self.font_family.family()
+        family = self.styling['font_family']
         if family in self.family_to_path:
             path = self.family_to_path[family]
         else:
             path = self.family_to_path['Calibri']
-        return ImageFont.truetype(path, self.font_size)
+        return ImageFont.truetype(path, self.styling['font_size'])
 
     def apply_styling_event(self):
-        self.font_size = self.window.fontSize.value()
-        self.font_family: QFont = self.window.fontFamily.currentFont()
-        self.line_thickness = self.window.lineThickness.value()
-        self.line_color = (
+        self.styling['font_size'] = self.window.fontSize.value()
+        self.styling['font_family'] = self.window.fontFamily.currentFont().family()
+        self.styling['line_thickness'] = self.window.lineThickness.value()
+        self.styling['line_color'] = (
             self.window.lineColorR.value(),
             self.window.lineColorG.value(),
             self.window.lineColorB.value()
         )
-        self.border = self.window.imageBorder.value()
+        self.styling['border'] = self.window.imageBorder.value()
 
         self.__set_styling_values()
         self.__compute_image()
 
     def __set_styling_values(self):
         self.tam.font = self.__get_current_font()
-        self.tam.thickness = self.line_thickness
-        self.tam.line_color = self.line_color
-        self.tam.border = self.border
+        self.tam.thickness = self.styling['line_thickness']
+        self.tam.line_color = self.styling['line_color']
+        self.tam.border = self.styling['border']
 
     def __generate_compute(self):
         width = 2048
-        thickness = 30
-        font = ImageFont.truetype(
-            self.family_to_path[self.font_family.family()], self.font_size)
-        line_color = '#020202'
         icons_path = os.path.join(app_root, 'lib', 'ui', 'icons')
         icons = [
             Image.open(os.path.join(icons_path, 'adjacent.png')),
@@ -195,9 +279,12 @@ class App(QObject):
             Image.open(os.path.join(icons_path, 'related_not_adjacent.png'))
         ]
         self.tam = TriangleAdjacencyMatrix(
-            width=width, thickness=thickness, font=font, line_color=line_color, icons=icons)
+            width=width, thickness=self.styling['line_thickness'],
+            font=self.__get_current_font(), line_color=self.styling['line_color'], icons=icons)
 
     def __compute_image(self):
+        self.window.statusbar.showMessage('Computing...')
+
         self.tam.matrix = self.matrix
         self.tam.items = self.labels
 
@@ -212,9 +299,9 @@ class App(QObject):
         image = ImageQt.ImageQt(img)
         pixmap = QPixmap()
         pixmap.convertFromImage(image)
-
         self.window.generated.setPixmap(pixmap.copy())
-        self.window.generated.show()
+
+        self.window.statusbar.showMessage('Done!', timeout=2000)
 
     def __add_label(self, label, list_update=True):
         # Update label list
@@ -318,13 +405,27 @@ class App(QObject):
 
         self.window = loader.load(ui_file)
         self.window.setWindowTitle(title)
+
+        appIcon = QIcon(os.path.join(app_root, 'lib', 'ui', 'icons', ''))
+        self.window.setWindowIcon(appIcon)
+
         ui_file.close()
 
         self.window.show()
 
 
+def open_new_window(file_path=None, curr_dir=None, family_to_path=None):
+    App(os.path.join(app_root, 'lib', 'ui', 'main.ui'),
+        'Triangle Adjacency Matrix', curr_dir=curr_dir, file_path=file_path, family_to_path=family_to_path)
+
+
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    AppView = App(os.path.join(app_root, 'lib', 'ui', 'main.ui'),
-                  'Triangle Adjacency Matrix')
+    args = sys.argv
+    app = QApplication(args)
+
+    if len(args) > 1:
+        open_new_window(file_path=args[1] if os.path.exists(args[1]) else None)
+    else:
+        open_new_window()
+
     sys.exit(app.exec_())
