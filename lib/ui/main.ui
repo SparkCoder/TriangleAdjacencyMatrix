@@ -576,7 +576,7 @@ selection-background-color: rgb(2, 2, 2);</string>
           <x>0</x>
           <y>0</y>
           <width>530</width>
-          <height>629</height>
+          <height>619</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -603,7 +603,7 @@ selection-background-color: rgb(2, 2, 2);</string>
      <x>0</x>
      <y>0</y>
      <width>1276</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -632,7 +632,7 @@ selection-background-color: rgb(2, 2, 2);</string>
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionSbout"/>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuThem"/>
@@ -714,7 +714,7 @@ selection-background-color: rgb(2, 2, 2);</string>
     <string>Ctrl+N</string>
    </property>
   </action>
-  <action name="actionSbout">
+  <action name="actionAbout">
    <property name="text">
     <string>About</string>
    </property>

@@ -4,10 +4,10 @@ from PIL import Image
 from PySide2 import QtWidgets
 
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication, QPushButton, QLabel, QListWidgetItem, QFileDialog, QWidget
+from PySide2.QtWidgets import QApplication, QMessageBox, QPushButton, QLabel, QListWidgetItem, QFileDialog, QWidget
 from PySide2.QtCore import QFile, QObject, QStandardPaths
 from PySide2.QtCore import Qt as Qt
-from PySide2.QtGui import QFont, QFontDatabase, QIcon, QPixmap
+from PySide2.QtGui import QCloseEvent, QFont, QFontDatabase, QIcon, QPixmap
 
 from lib.labelListItem import LabelListItem
 
@@ -20,11 +20,46 @@ import pickle
 import sys
 import os
 
-# import resources
+# Import resources
 from lib.ui import res_rc
 
 # Globals
 app_root = os.path.dirname(os.path.realpath(__file__))
+
+
+class AboutDialog(QObject):
+    instance = None
+
+    def __init__(self, parent=None):
+        super(AboutDialog, self).__init__(parent)
+        AboutDialog.instance = self
+
+        self.__load_ui()
+
+        self.window.okBtn.clicked.connect(self.close_event)
+
+    def __load_ui(self):
+        ui_file_name = os.path.join(app_root, 'lib', 'ui', 'about.ui')
+
+        loader = QUiLoader()
+        ui_file = QFile(ui_file_name)
+
+        if not ui_file.open(QFile.ReadOnly):
+            raise Exception(
+                f"Cannot open {ui_file_name}: {ui_file.errorString()}")
+
+        self.window = loader.load(ui_file)
+        icon_path = os.path.join(app_root, 'lib', 'ui', 'icons', 'icon.png')
+        appIcon = QIcon(icon_path)
+        self.window.setWindowIcon(appIcon)
+
+        ui_file.close()
+
+        self.window.show()
+
+    def close_event(self):
+        AboutDialog.instance = None
+        self.window.close()
 
 
 class App(QObject):
@@ -84,6 +119,7 @@ class App(QObject):
         self.__update_matrix()
 
         # Events
+        self.window.actionAbout.triggered.connect(self.about_event)
         self.window.actionLight.triggered.connect(self.set_light_theme_event)
         self.window.actionDark.triggered.connect(self.set_dark_theme_event)
         self.window.actionNew.triggered.connect(
@@ -207,7 +243,15 @@ class App(QObject):
                             family_to_path=self.family_to_path)
 
     def quit_app_event(self):
+        if AboutDialog.instance is not None:
+            AboutDialog.instance.close_event()
         self.window.close()
+
+    def about_event(self):
+        if AboutDialog.instance is None:
+            AboutDialog()
+        else:
+            AboutDialog.instance.window.activateWindow()
 
     def export_event(self):
         if self.image is not None:
@@ -415,7 +459,8 @@ class App(QObject):
         self.window = loader.load(ui_file)
         self.window.setWindowTitle(title)
 
-        appIcon = QIcon(os.path.join(app_root, 'lib', 'ui', 'icons', ''))
+        icon_path = os.path.join(app_root, 'lib', 'ui', 'icons', 'icon.png')
+        appIcon = QIcon(icon_path)
         self.window.setWindowIcon(appIcon)
 
         ui_file.close()

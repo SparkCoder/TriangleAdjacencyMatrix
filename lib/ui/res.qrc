@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>icons/icon.png</file>
     <file>icons/adjacent.png</file>
     <file>icons/not_adjacent.png</file>
     <file>icons/not_related.png</file>
